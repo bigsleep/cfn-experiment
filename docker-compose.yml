@@ -1,0 +1,9 @@
+version: "2"
+services:
+  app:
+    image: tkaaad97/haskell-docker:8.4.3
+    command: bash -c 'stack exec cfn-code-gen'
+    working_dir: /app
+    volumes:
+      - .:/app
+      - .stack:/root/.stack
