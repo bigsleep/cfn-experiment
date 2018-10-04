@@ -3,7 +3,7 @@ services:
   app:
     image: tkaaad97/haskell-docker:8.4.3
     command: bash -c 'stack exec cfn-code-gen'
-    working_dir: /app
+    working_dir: $PWD
     volumes:
-      - .:/app
+      - "$PWD:$PWD"
       - .stack:/root/.stack
