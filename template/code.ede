@@ -1,18 +1,27 @@
+{% raw %}{-# LANGUAGE TemplateHaskell #-}{% endraw %}
 module {{Module}}
     ({% for item in PropertyDefinitions %} {{item.value.Name}}(..)
     ,{% endfor %} {{ResourceName}}(..)
-    )
+    ) where
 
-import Data.Aeson (Value)
+import AWS (Map, Tag)
+import Data.Text (Text)
+import qualified Data.Aeson as DA (FromJSON(..), ToJSON(..), Options(..), Value, defaultOptions)
+import qualified Data.Aeson.TH as DA (deriveJSON)
 
 {% for def in PropertyDefinitions %}
 data {{def.value.Name}} = {{def.value.Name}}
     {% raw %}{{% endraw %}{% for property in def.value.Properties %}{% if !property.first %}, _{{def.value.Name}}{{property.value.Name}} :: {{property.value.Type}}
     {% else %} _{{def.value.Name}}{{property.value.Name}} :: {{property.value.Type}}
-    {% endif %}{% endfor %}{% raw %}}{% endraw %}
+    {% endif %}{% endfor %}{% raw %}}{% endraw %} deriving (Show, Eq)
 
 {% endfor %}
 data {{ResourceName}} = {{ResourceName}}
     {% raw %}{{% endraw %}{% for property in ResourceDefinition.Properties %}{% if !property.first %}, _{{ResourceName}}{{property.value.Name}} :: {{property.value.Type}}
     {% else %} _{{ResourceName}}{{property.value.Name}} :: {{property.value.Type}}
-    {% endif %}{% endfor %}{% raw %}}{% endraw %}
+    {% endif %}{% endfor %}{% raw %}}{% endraw %} deriving (Show, Eq)
+
+{% for def in PropertyDefinitions %}
+$(DA.deriveJSON DA.defaultOptions {% raw %}{{% endraw %} DA.fieldLabelModifier = drop {{(def.value.Name | length) + 1}} {% raw %}}{% endraw %} ''{{def.value.Name}})
+{% endfor %}
+$(DA.deriveJSON DA.defaultOptions {% raw %}{{% endraw %} DA.fieldLabelModifier = drop {{(ResourceName | length) + 1}} {% raw %}}{% endraw %} ''{{ResourceName}})

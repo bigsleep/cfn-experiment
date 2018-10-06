@@ -15,10 +15,10 @@ module CFn
     ) where
 
 import Data.Aeson ((.:), (.=))
-import qualified Data.Aeson as DA (FromJSON, ToJSON, Value(..), object,
+import qualified Data.Aeson as DA (FromJSON, Options(..), SumEncoding(..),
+                                   ToJSON, Value(..), defaultOptions, object,
                                    parseJSON, toJSON, withObject)
-import qualified Data.Aeson.TH as DA (Options(..), SumEncoding(..),
-                                      defaultOptions, deriveJSON)
+import qualified Data.Aeson.TH as DA (deriveJSON)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
@@ -85,14 +85,14 @@ data ResourceTypeDefinition = ResourceTypeDefinition
     , resourceTypeDefinitionAttributes    :: !(Maybe (HashMap Text Attribute))
     , resourceTypeDefinitionProperties    :: !(HashMap Text Property)
     } deriving (Show, Eq)
-$(DA.deriveJSON DA.defaultOptions { DA.fieldLabelModifier = drop 22, DA.sumEncoding = DA.UntaggedValue } ''ResourceTypeDefinition)
+$(DA.deriveJSON DA.defaultOptions { DA.fieldLabelModifier = drop 22 } ''ResourceTypeDefinition)
 
 data Specification = Specification
     { specificationPropertyTypes                :: !PropertyTypeDefinitions
     , specificationResourceTypes                :: !(HashMap Text ResourceTypeDefinition)
     , specificationResourceSpecificationVersion :: !Text
     } deriving (Show, Eq)
-$(DA.deriveJSON DA.defaultOptions { DA.fieldLabelModifier = drop 13, DA.sumEncoding = DA.UntaggedValue } ''Specification)
+$(DA.deriveJSON DA.defaultOptions { DA.fieldLabelModifier = drop 13 } ''Specification)
 
 instance DA.FromJSON Property where
     parseJSON = DA.withObject "Properties" $ \v ->

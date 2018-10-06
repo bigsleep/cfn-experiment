@@ -21,6 +21,9 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- text
+- unordered-containers
+- aeson
 
 library:
   source-dirs: src
@@ -35,13 +38,11 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - bytestring
-    - text
-    - unordered-containers
-    - aeson
+    - directory
+    - ede
     - http-client
     - http-client-tls
     - http-types
-    - ede
 
 tests:
   cfn-experiment-test:

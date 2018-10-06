@@ -5,20 +5,20 @@ import CFn (Attribute(..), AttributeType(..), PrimitiveType(..), Property(..),
             PropertyType(..), PropertyTypeDefinition(..),
             PropertyTypeDefinitions(..), ResourceTypeDefinition(..),
             Specification(..))
+import Data.Aeson (eitherDecodeStrict, (.=))
+import qualified Data.Aeson as DA (object)
 import qualified Data.ByteString as BS (readFile)
 import qualified Data.ByteString.Lazy as BSL (toStrict)
+import qualified Data.HashMap.Strict as HM
 import Data.Maybe (maybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as Text (putStr, readFile)
+import qualified Data.Text.IO as Text (putStr, readFile, writeFile)
 import qualified Data.Text.Lazy as TL (toStrict)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Status (statusCode)
-
-import Data.Aeson (eitherDecodeStrict, (.=))
-import qualified Data.Aeson as DA (object)
-import qualified Data.HashMap.Strict as HM
+import System.Directory (createDirectoryIfMissing)
 import qualified Text.EDE as EDE (eitherParseFile, eitherRender, fromPairs)
 
 main :: IO ()
@@ -44,22 +44,19 @@ main = do
 
     where
 
-    renderPropertyDefinitions t (k, ds) = do
-        let env = EDE.fromPairs
-                [ "Module" .= Text.replace "::" "." k
-                , "PropertyDefinitions" .= map propertyDefToJSON ds
-                ]
-        either error (Text.putStr . TL.toStrict)  $ t >>= (`EDE.eitherRender` env)
-
     renderResource t ps (k, resource) =  do
         let ds = HM.lookupDefault [] k ps
+            m = Text.replace "::" "." k
+            path = Text.concat ["src/", Text.replace "." "/" m, ".hs"]
+            dir = fst . Text.breakOnEnd "/" $ path
             env = EDE.fromPairs
-                [ "Module" .= Text.replace "::" "." k
+                [ "Module" .= m
                 , "ResourceName" .= snd (Text.breakOnEnd "::" k)
                 , "PropertyDefinitions" .= map propertyDefToJSON ds
                 , "ResourceDefinition" .= resourceToJSON resource
                 ]
-        either error (Text.putStr . TL.toStrict)  $ t >>= (`EDE.eitherRender` env)
+        createDirectoryIfMissing True (Text.unpack dir)
+        either error (Text.writeFile (Text.unpack path) . TL.toStrict)  $ t >>= (`EDE.eitherRender` env)
 
     renderType True (PropertyType t) = t
     renderType False (PropertyType t) = Text.concat ["Maybe ", t]
@@ -73,7 +70,7 @@ main = do
     renderPrimitiveType PrimBoolean   = "Bool"
     renderPrimitiveType PrimDouble    = "Double"
     renderPrimitiveType PrimInteger   = "Int"
-    renderPrimitiveType PrimJson      = "Value"
+    renderPrimitiveType PrimJson      = "DA.Value"
     renderPrimitiveType PrimLong      = "Integer"
     renderPrimitiveType PrimString    = "Text"
     renderPrimitiveType PrimTimestamp = "Text"
