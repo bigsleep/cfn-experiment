@@ -1,0 +1,18 @@
+module {{Module}}
+    ({% for item in PropertyDefinitions %} {{item.value.Name}}(..)
+    ,{% endfor %} {{ResourceName}}(..)
+    )
+
+import Data.Aeson (Value)
+
+{% for def in PropertyDefinitions %}
+data {{def.value.Name}} = {{def.value.Name}}
+    {% raw %}{{% endraw %}{% for property in def.value.Properties %}{% if !property.first %}, _{{def.value.Name}}{{property.value.Name}} :: {{property.value.Type}}
+    {% else %} _{{def.value.Name}}{{property.value.Name}} :: {{property.value.Type}}
+    {% endif %}{% endfor %}{% raw %}}{% endraw %}
+
+{% endfor %}
+data {{ResourceName}} = {{ResourceName}}
+    {% raw %}{{% endraw %}{% for property in ResourceDefinition.Properties %}{% if !property.first %}, _{{ResourceName}}{{property.value.Name}} :: {{property.value.Type}}
+    {% else %} _{{ResourceName}}{{property.value.Name}} :: {{property.value.Type}}
+    {% endif %}{% endfor %}{% raw %}}{% endraw %}
