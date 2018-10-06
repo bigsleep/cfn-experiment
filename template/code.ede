@@ -1,12 +1,15 @@
+{% raw %}{-# LANGUAGE OverloadedStrings #-}{% endraw %}
 {% raw %}{-# LANGUAGE TemplateHaskell #-}{% endraw %}
 module {{Module}}
     ({% for item in PropertyDefinitions %} {{item.value.Name}}(..)
     ,{% endfor %} {{ResourceName}}(..)
+    , resourceJSON
     ) where
 
 import AWS (Map, Tag)
 import Data.Text (Text)
-import qualified Data.Aeson as DA (FromJSON(..), ToJSON(..), Options(..), Value, defaultOptions)
+import Data.Aeson ((.=))
+import qualified Data.Aeson as DA (FromJSON(..), ToJSON(..), Options(..), Value, defaultOptions, object)
 import qualified Data.Aeson.TH as DA (deriveJSON)
 
 {% for def in PropertyDefinitions %}
@@ -25,3 +28,6 @@ data {{ResourceName}} = {{ResourceName}}
 $(DA.deriveJSON DA.defaultOptions {% raw %}{{% endraw %} DA.fieldLabelModifier = drop {{(def.value.Name | length) + 1}} {% raw %}}{% endraw %} ''{{def.value.Name}})
 {% endfor %}
 $(DA.deriveJSON DA.defaultOptions {% raw %}{{% endraw %} DA.fieldLabelModifier = drop {{(ResourceName | length) + 1}} {% raw %}}{% endraw %} ''{{ResourceName}})
+
+resourceJSON :: {{ResourceName}} -> DA.Value
+resourceJSON a = DA.object [ "Type" .= ("{{ResourceNameWithNS}}" :: Text), "Properties" .= a ]

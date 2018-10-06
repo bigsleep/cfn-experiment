@@ -23,18 +23,12 @@ import qualified Text.EDE as EDE (eitherParseFile, eitherRender, fromPairs)
 
 main :: IO ()
 main = do
-    {-
     manager <- newManager tlsManagerSettings
-
     request <- parseRequest "https://d33vqc0rt9ld30.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json"
     response <- httpLbs request manager
 
-    putStrLn $ "The status code was: " ++ show (statusCode $ responseStatus response)
-    let x = eitherDecodeStrict . BSL.toStrict $ responseBody response
-    print (x :: Either String Specification)
-    -}
-    source <- BS.readFile "resource-specification.json"
-    spec <- either error return $ eitherDecodeStrict source
+    spec <- either error return . eitherDecodeStrict . BSL.toStrict $ responseBody response
+
     let propertyDefinitions = unPropertyTypeDefinitions . specificationPropertyTypes $ spec
         resourceDefinitions = specificationResourceTypes spec
 
@@ -52,6 +46,7 @@ main = do
             env = EDE.fromPairs
                 [ "Module" .= m
                 , "ResourceName" .= snd (Text.breakOnEnd "::" k)
+                , "ResourceNameWithNS" .= k
                 , "PropertyDefinitions" .= map propertyDefToJSON ds
                 , "ResourceDefinition" .= resourceToJSON resource
                 ]
